@@ -97,7 +97,7 @@ namespace CodeBricks
        * 
        * If we capture it after we check whether all the threads are sleeping, it might happen that we'll stuck forever in case of exception.
        * I.e. Total num of threads: 15. 13 threads are sleeping. The 14th thread incremented free threads counter to 14 and verified that 14 != 15. It decided to go to sleep.
-       * If at this moment the 15th thread failes, it exists and decrements the total threads counter. If 14th thread capture stamp now, it will sleep forever - nobody will update it more.
+       * If at this moment the 15th thread fails, it exists and decrements the total threads counter. If 14th thread capture stamp now, it will sleep forever - nobody will update it more.
        * 
        * Because of that we should capture stamp before we do our comparison.
        */
@@ -108,7 +108,7 @@ namespace CodeBricks
         return false;
       }
 
-      /* Increase number of free theads. The only reason why we could exit is that all the threads finished their work.
+      /* Increase number of free threads. The only reason why we could exit is that all the threads finished their work.
        */
 
       int newNumberOfFreeThreads = Interlocked.Increment(ref this.m_numberOfFreeThreads);
@@ -135,7 +135,7 @@ namespace CodeBricks
     /// </summary>
     protected virtual void DeepSleepPhase(long oldStamp)
     {
-      //So sense to await if tasks are finished. Also shold wake up if stamp was changed.
+      //No sense to await if tasks are finished. Also should wake up if stamp was changed.
       while (!this.m_finished && oldStamp == this.m_processedStamp)
       {
         Thread.Sleep(0);
