@@ -18,15 +18,15 @@ namespace CodeBricks
   /// </summary>
   public class AtomisticTask<TSubTaskInfo>
   {
-    private volatile bool m_finished;
+    private volatile bool _finished;
 
-    private int m_numberOfFreeThreads;
+    private int _numberOfFreeThreads;
 
-    private volatile int m_numberOfThreads;
+    private volatile int _numberOfThreads;
 
-    private long m_processedStamp;
+    private long _processedStamp;
 
-    private ConcurrentQueue<TSubTaskInfo> m_subTasks = new ConcurrentQueue<TSubTaskInfo>();
+    private readonly ConcurrentQueue<TSubTaskInfo> _subTasks = new ConcurrentQueue<TSubTaskInfo>();
 
     /// <summary>
     /// Each thread that wants to participate in tasks execution should call this gate method.
@@ -35,7 +35,9 @@ namespace CodeBricks
     public void ParticipateInTask(Action<TSubTaskInfo> subTaskExecutor)
     {
       //To consider that we have one more working thread
-      Interlocked.Increment(ref this.m_numberOfThreads);
+#pragma warning disable 420
+      Interlocked.Increment(ref this._numberOfThreads);
+#pragma warning restore 420
 
       try
       {
@@ -43,7 +45,7 @@ namespace CodeBricks
         {
           //While we have tasks, we should execute them.
           TSubTaskInfo taskInfo;
-          while (this.m_subTasks.TryDequeue(out taskInfo))
+          while (this._subTasks.TryDequeue(out taskInfo))
           {
             //wake up awaiting threads
             this.UpdateProcessedStamp();
@@ -55,15 +57,16 @@ namespace CodeBricks
            * We exit only if all the threads finished their tasks.
            * Otherwise we use stamp to identify that more tasks are present in queue and start to participate.
            */
-        }
-        while (this.WaitForTasks());
+        } while (this.WaitForTasks());
       }
-        /* When we exit, we restore number of threads.
-         * That is important, so no other threads will rely on this thread.
-         */
+      /* When we exit, we restore number of threads.
+       * That is important, so no other threads will rely on this thread.
+       */
       finally
       {
-        Interlocked.Decrement(ref this.m_numberOfThreads);
+#pragma warning disable 420
+        Interlocked.Decrement(ref this._numberOfThreads);
+#pragma warning restore 420
 
         //If there are awaiting threads relying on current thread's results, they might stuck forever.
         //We should wake up all the awaiting threads if we are exiting.
@@ -78,12 +81,12 @@ namespace CodeBricks
     /// <param name="taskInfo"></param>
     public void AddSubTask(TSubTaskInfo taskInfo)
     {
-      if (!this.m_finished)
+      if (!this._finished)
       {
         throw new InvalidOperationException("Subtask cannot be added after task is finished.");
       }
 
-      this.m_subTasks.Enqueue(taskInfo);
+      this._subTasks.Enqueue(taskInfo);
     }
 
     /// <summary>
@@ -101,9 +104,9 @@ namespace CodeBricks
        * 
        * Because of that we should capture stamp before we do our comparison.
        */
-      long oldStamp = this.m_processedStamp;
+      long oldStamp = this._processedStamp;
 
-      if (this.m_finished)
+      if (this._finished)
       {
         return false;
       }
@@ -111,21 +114,21 @@ namespace CodeBricks
       /* Increase number of free threads. The only reason why we could exit is that all the threads finished their work.
        */
 
-      int newNumberOfFreeThreads = Interlocked.Increment(ref this.m_numberOfFreeThreads);
+      int newNumberOfFreeThreads = Interlocked.Increment(ref this._numberOfFreeThreads);
 
       /* To ensure that _total_ is read only after increment operation. Also that is to ensure that _stamp_ is captured before we perform validation below.
        */
       Thread.MemoryBarrier();
 
-      if (newNumberOfFreeThreads == this.m_numberOfThreads)
+      if (newNumberOfFreeThreads == this._numberOfThreads)
       {
-        this.m_finished = true;
+        this._finished = true;
         return false;
       }
 
       this.DeepSleepPhase(oldStamp);
 
-      Interlocked.Decrement(ref this.m_numberOfFreeThreads);
+      Interlocked.Decrement(ref this._numberOfFreeThreads);
 
       return true;
     }
@@ -136,7 +139,7 @@ namespace CodeBricks
     protected virtual void DeepSleepPhase(long oldStamp)
     {
       //No sense to await if tasks are finished. Also should wake up if stamp was changed.
-      while (!this.m_finished && oldStamp == this.m_processedStamp)
+      while (!this._finished && oldStamp == this._processedStamp)
       {
         Thread.Sleep(0);
       }
@@ -148,7 +151,7 @@ namespace CodeBricks
     /// </summary>
     protected virtual void UpdateProcessedStamp()
     {
-      Interlocked.Increment(ref this.m_processedStamp);
+      Interlocked.Increment(ref this._processedStamp);
     }
   }
 }
