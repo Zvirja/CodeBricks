@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConcurrentCollector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AtomisticTask.cs" />
     <Compile Include="ThreadStack.cs" />
