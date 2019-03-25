@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
+using AutoFixture.Xunit2;
 using FluentAssertions;
-using Ploeh.AutoFixture.Xunit2;
 using Xunit;
 
 namespace CodeBricks.Tests
@@ -137,7 +137,7 @@ namespace CodeBricks.Tests
       Action getter = () => ThreadStack<object>.GetCurrentValue();
 
       //assert
-      getter.ShouldNotThrow();
+      getter.Should().NotThrow();
     }
 
     [Fact]
@@ -147,7 +147,7 @@ namespace CodeBricks.Tests
       Action pop = () => ThreadStack<object>.PopValue(false);
 
       //assert
-      pop.ShouldNotThrow();
+      pop.Should().NotThrow();
     }
 
     [Fact]
@@ -157,7 +157,7 @@ namespace CodeBricks.Tests
       Action pop = () => ThreadStack<object>.PopValue();
 
       //assert
-      pop.ShouldThrow<InvalidOperationException>();
+      pop.Should().Throw<InvalidOperationException>();
     }
   }
 }

@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoFixture.Xunit2;
 using FluentAssertions;
-using Ploeh.AutoFixture.Xunit2;
 using Xunit;
 
 namespace CodeBricks.Tests
@@ -148,7 +148,7 @@ namespace CodeBricks.Tests
       };
 
       //assert
-      concurrentPopulation.ShouldNotThrow();
+      concurrentPopulation.Should().NotThrow();
       sut.Count.Should().Be(ConcurrencyLevel*ItemsPerThread);
     }
   }
